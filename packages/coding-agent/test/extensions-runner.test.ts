@@ -10,6 +10,7 @@ import type { AgentMessage, AgentTool } from "@oh-my-pi/pi-agent-core";
 import type { ImageContent, TextContent } from "@oh-my-pi/pi-ai";
 import { getBundledModel } from "@oh-my-pi/pi-catalog/models";
 import { ModelRegistry } from "@oh-my-pi/pi-coding-agent/config/model-registry";
+import { Settings } from "@oh-my-pi/pi-coding-agent/config/settings";
 import { discoverAndLoadExtensions, ExtensionRuntime } from "@oh-my-pi/pi-coding-agent/extensibility/extensions/loader";
 import {
 	EXTENSION_HANDLER_TIMEOUT_MS,
@@ -1202,6 +1203,10 @@ describe("ExtensionRunner", () => {
 	});
 
 	describe("handler timeouts", () => {
+		it("uses the default tool-call timeout in isolated settings", () => {
+			expect(Settings.isolated().get("extensionHandlers.toolCallTimeoutMs")).toBe(30_000);
+		});
+
 		it("times out session_start handlers, emits an error, and continues to sibling extensions", async () => {
 			const hangExtensionPath = path.join(tempDir.path(), "hang-session-start.ts");
 			const fastExtensionPath = path.join(tempDir.path(), "fast-session-start.ts");
@@ -1281,20 +1286,21 @@ describe("ExtensionRunner", () => {
 			);
 
 			const result = await loadTestExtensions([hangExtensionPath]);
+			const settings = Settings.isolated({ "extensionHandlers.toolCallTimeoutMs": 10 });
 			const runner = new ExtensionRunner(
 				result.extensions,
 				result.runtime,
 				tempDir.path(),
 				sessionManager,
 				modelRegistry,
+				undefined,
+				settings,
 			);
 			const warnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
 			const errors: Array<{ extensionPath: string; event: string; error: string }> = [];
 			runner.onError(err => {
 				errors.push(err);
 			});
-			testSetExtensionHandlerTimeoutMs(10);
-
 			const executeCalls: unknown[] = [];
 			const tool: AgentTool = {
 				name: "sleepy",

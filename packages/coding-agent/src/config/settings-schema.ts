@@ -523,6 +523,7 @@ export const SETTINGS_SCHEMA = {
 	},
 
 	extensions: { type: "array", default: EMPTY_STRING_ARRAY },
+	"extensionHandlers.toolCallTimeoutMs": { type: "number", default: 30_000 },
 
 	enabledModels: { type: "array", default: EMPTY_STRING_ARRAY },
 

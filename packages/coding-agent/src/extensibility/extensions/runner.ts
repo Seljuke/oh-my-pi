@@ -1092,7 +1092,7 @@ export class ExtensionRunner {
 	 */
 	async emitToolCall(event: ToolCallEvent): Promise<ToolCallEventResult | undefined> {
 		const ctx = this.createContext();
-		const timeoutMs = extensionHandlerTimeoutMs;
+		const timeoutMs = this.settings?.get("extensionHandlers.toolCallTimeoutMs") ?? extensionHandlerTimeoutMs;
 		let result: ToolCallEventResult | undefined;
 
 		for (const ext of this.extensions) {
